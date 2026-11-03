@@ -5,28 +5,21 @@ format bank
 F = 1.0; V = 1.0;             
 CA0 = 1.0; T0 = 350;          
 R = 8.314;                    
-% Flow rate and volume (L/min, L) 
-% Inlet conditions 
-% Gas constant (J/mol.K) 
 rho = 1000; Cp = 4.18;        
-% Density and heat capacity 
 Q1 = -2e5; Q2 = -2e5;         
-% Reaction 1 (desired) 
-% Heat removal from each reactor 
 k01 = 1e3; E1 = 8000; dH1 = -5e4; 
-% Reaction 2 (undesired) 
 k02 = 500; E2 = 10000; dH2 = -3e4; 
 % ---------------- Steady-State Assumed ---------------- 
 CA1 = 0.6; T1 = 390; 
 CA2 = 0.45; T2 = 395; 
 % ---------------- Reaction Rates ---------------- 
-k1_1 = k01 * exp(-E1 / (R * T1));  % Reactor 1 
+k1_1 = k01 * exp(-E1 / (R * T1));  
 k2_1 = k02 * exp(-E2 / (R * T1)); 
-k1_2 = k01 * exp(-E1 / (R * T2));  % Reactor 2 
+k1_2 = k01 * exp(-E1 / (R * T2));  
 k2_2 = k02 * exp(-E2 / (R * T2)); 
-dk1_1 = k1_1 * E1 / (R * T1^2);    % Derivatives w.r.t T1 
+dk1_1 = k1_1 * E1 / (R * T1^2);    
 dk2_1 = k2_1 * E2 / (R * T1^2); 
-dk1_2 = k1_2 * E1 / (R * T2^2);    % Derivatives w.r.t T2 
+dk1_2 = k1_2 * E1 / (R * T2^2);    
 dk2_2 = k2_2 * E2 / (R * T2^2); 
 % ---------------- Jacobian Matrix (4x4) ---------------- 
 % State vector: *CA1, T1, CA2, T2+ 
@@ -35,26 +28,18 @@ J = zeros(4);
 % dCA1/dt = (F/V)*(CA0 - CA1) - k1*CA1 - k2*CA1 
 J(1,1) = -F/V - k1_1 - k2_1;                      
 J(1,2) = -CA1*(dk1_1 + dk2_1);                    
-% ∂(dCA1)/∂CA1 
-% ∂(dCA1)/∂T1 
 % dT1/dt = (F/V)*(T0 - T1) + Q1/(rho*Cp*V) + heat gen 
 J(2,1) = (-dH1*k1_1 - dH2*k2_1)/(rho*Cp);         
-% ∂(dT1)/∂CA1 
-J(2,2) = -F/V + (-dH1*dk1_1*CA1 - dH2*dk2_1*CA1)/(rho*Cp); % ∂(dT1)/∂T1 
+J(2,2) = -F/V + (-dH1*dk1_1*CA1 - dH2*dk2_1*CA1)/(rho*Cp); 
 % --- Reactor 2 equations --- 
 % dCA2/dt = (F/V)*(CA1 - CA2) - k1*CA2 - k2*CA2 
 J(3,1) = F/V;                                     
 J(3,3) = -F/V - k1_2 - k2_2;                      
 J(3,4) = -CA2*(dk1_2 + dk2_2);                    
-% ∂(dCA2)/∂CA1 
-% ∂(dCA2)/∂CA2 
-% ∂(dCA2)/∂T2 
 % dT2/dt = (F/V)*(T1 - T2) + Q2/(rho*Cp*V) + heat gen 
 J(4,2) = F/V;                                     
-% ∂(dT2)/∂T1 
 J(4,3) = (-dH1*k1_2 - dH2*k2_2)/(rho*Cp);         
-% ∂(dT2)/∂CA2 
-J(4,4) = -F/V + (-dH1*dk1_2*CA2 - dH2*dk2_2*CA2)/(rho*Cp); % ∂(dT2)/∂T2 
+J(4,4) = -F/V + (-dH1*dk1_2*CA2 - dH2*dk2_2*CA2)/(rho*Cp); 
 % ---------------- Eigenvalue Analysis ---------------- 
 *eigVecs, eigVals+ = eig(J); 
 disp('Jacobian Matrix (4x4):'); 
